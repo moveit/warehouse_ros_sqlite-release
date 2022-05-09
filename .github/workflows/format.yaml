@@ -15,15 +15,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - name: Install ament linters
+    - name: Install clang-format-10
+      run: sudo apt-get install -y clang-format-10
+    - name: Install catkin-lint
       run: |
-        sudo apt-get install -y curl gnupg2 lsb-release
-        curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-        sudo sh -c 'echo "deb [arch=$(dpkg --print-architecture)] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
-        sudo apt-get update
-        sudo apt-get install -y ros-rolling-ament-lint-common python3-pip
-        sudo pip3 install pre-commit
-    - name: Run pre-commit
-      run: |
-        source /opt/ros/rolling/setup.sh
-        pre-commit run --show-diff-on-failure --color=always -a
+        lsb_release -sc
+        sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+        sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+        sudo apt-get -q update
+        sudo apt-get -q install python3-rosdep
+        sudo rosdep init
+        rosdep update
+        sudo apt-get -q install catkin-lint
+        export ROS_DISTRO=noetic
+    - uses: pre-commit/action@v2.0.0

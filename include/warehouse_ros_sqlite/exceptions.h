@@ -26,36 +26,42 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#pragma once
 
-#include <gtest/gtest.h>
-#include <ros/ros.h>
-#include <warehouse_ros/database_loader.h>
-#include <geometry_msgs/Vector3.h>
+#include <warehouse_ros/exceptions.h>
+#include <warehouse_ros_sqlite/warehouse_ros_sqlite_export.h>
+#include <boost/format.hpp>
 
-TEST(DatabaseLoader, LoadSQLite)
-{
-  warehouse_ros::DatabaseLoader l;
-
-  const auto d = l.loadDatabase();
-
-  ASSERT_TRUE(static_cast<bool>(d));
-  d->setParams(":memory:", 0);
-
-  ASSERT_TRUE(d->connect());
-
-  using V = geometry_msgs::Vector3;
-  auto coll = d->openCollection<V>("main", "coll");
-  auto meta1 = coll.createMetadata();
-  meta1->append("x", 3);
-
-  coll.insert(V(), meta1);
-
-  EXPECT_EQ(coll.count(), 1U);
+extern "C" {
+struct sqlite3;
+struct sqlite3_stmt;
 }
 
-int main(int argc, char** argv)
+namespace warehouse_ros_sqlite
 {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "tester");
-  return RUN_ALL_TESTS();
-}
+struct WAREHOUSE_ROS_SQLITE_EXPORT InternalError : public warehouse_ros::WarehouseRosException
+{
+  using warehouse_ros::WarehouseRosException::WarehouseRosException;
+  InternalError(const char* msg, sqlite3* db);
+  InternalError(const char* msg, sqlite3_stmt* stmt);
+};
+
+struct WAREHOUSE_ROS_SQLITE_EXPORT DatatypeMismatch : public warehouse_ros::WarehouseRosException
+{
+  using warehouse_ros::WarehouseRosException::WarehouseRosException;
+};
+
+struct WAREHOUSE_ROS_SQLITE_EXPORT SchemaVersionMismatch : public warehouse_ros::WarehouseRosException
+{
+  int version_in_database_, version_compiled_in_;
+  using warehouse_ros::WarehouseRosException::WarehouseRosException;
+  SchemaVersionMismatch(int version_in_database, int version_compiled_in)
+    : warehouse_ros::WarehouseRosException(
+          boost::format("Database schema version mismatch, stored in file: %1%, compiled in version: %2%") %
+          version_in_database % version_compiled_in)
+    , version_in_database_(version_in_database)
+    , version_compiled_in_(version_compiled_in)
+  {
+  }
+};
+}  // namespace warehouse_ros_sqlite

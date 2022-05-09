@@ -26,36 +26,30 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#pragma once
 
-#include <gtest/gtest.h>
-#include <ros/ros.h>
-#include <warehouse_ros/database_loader.h>
-#include <geometry_msgs/Vector3.h>
+#include <warehouse_ros/query_results.h>
+#include <warehouse_ros_sqlite/utils.h>
+#include <warehouse_ros_sqlite/warehouse_ros_sqlite_export.h>
 
-TEST(DatabaseLoader, LoadSQLite)
+namespace warehouse_ros_sqlite
 {
-  warehouse_ros::DatabaseLoader l;
-
-  const auto d = l.loadDatabase();
-
-  ASSERT_TRUE(static_cast<bool>(d));
-  d->setParams(":memory:", 0);
-
-  ASSERT_TRUE(d->connect());
-
-  using V = geometry_msgs::Vector3;
-  auto coll = d->openCollection<V>("main", "coll");
-  auto meta1 = coll.createMetadata();
-  meta1->append("x", 3);
-
-  coll.insert(V(), meta1);
-
-  EXPECT_EQ(coll.count(), 1U);
-}
-
-int main(int argc, char** argv)
+class WAREHOUSE_ROS_SQLITE_EXPORT ResultIteratorHelper : public warehouse_ros::ResultIteratorHelper
 {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "tester");
-  return RUN_ALL_TESTS();
-}
+  sqlite3_stmt_ptr stmt_;
+  std::vector<std::pair<std::string, int>> metadata_cols_;
+  void initMetadataCols();
+
+public:
+  ResultIteratorHelper() = default;
+  ResultIteratorHelper(sqlite3_stmt_ptr stmt) : stmt_(std::move(stmt))
+  {
+    initMetadataCols();
+  }
+  bool next() override;
+  bool hasData() const override;
+  warehouse_ros::Metadata::ConstPtr metadata() const override;
+  std::string message() const override;
+};
+
+}  // namespace warehouse_ros_sqlite

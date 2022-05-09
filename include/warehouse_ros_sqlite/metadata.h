@@ -26,36 +26,48 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#pragma once
 
-#include <gtest/gtest.h>
-#include <ros/ros.h>
-#include <warehouse_ros/database_loader.h>
-#include <geometry_msgs/Vector3.h>
+#include <warehouse_ros/metadata.h>
+#include <boost/variant.hpp>
+#include <map>
+#include <warehouse_ros_sqlite/utils.h>
+#include <warehouse_ros_sqlite/warehouse_ros_sqlite_export.h>
 
-TEST(DatabaseLoader, LoadSQLite)
-{
-  warehouse_ros::DatabaseLoader l;
-
-  const auto d = l.loadDatabase();
-
-  ASSERT_TRUE(static_cast<bool>(d));
-  d->setParams(":memory:", 0);
-
-  ASSERT_TRUE(d->connect());
-
-  using V = geometry_msgs::Vector3;
-  auto coll = d->openCollection<V>("main", "coll");
-  auto meta1 = coll.createMetadata();
-  meta1->append("x", 3);
-
-  coll.insert(V(), meta1);
-
-  EXPECT_EQ(coll.count(), 1U);
+extern "C" {
+struct sqlite3_stmt;
+struct sqlite3;
 }
 
-int main(int argc, char** argv)
+namespace warehouse_ros_sqlite
 {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "tester");
-  return RUN_ALL_TESTS();
-}
+class WAREHOUSE_ROS_SQLITE_EXPORT Metadata : public warehouse_ros::Metadata
+{
+public:
+  using Variant = boost::variant<NullValue, std::string, double, int>;
+  void append(const std::string& name, const std::string& val) override;
+  void append(const std::string& name, const double val) override;
+  void append(const std::string& name, const int val) override;
+  void append(const std::string& name, const bool val) override;
+  std::string lookupString(const std::string& name) const override;
+  double lookupDouble(const std::string& name) const override;
+  int lookupInt(const std::string& name) const override;
+  bool lookupBool(const std::string& name) const override;
+  bool lookupField(const std::string& name) const override;
+  std::set<std::string> lookupFieldNames() const override;
+  void append(const std::string& name, sqlite3_stmt* stmt, int col);
+  const auto& data() const
+  {
+    return data_;
+  }
+  void ensureColumns(sqlite3* db, const std::string& unescaped_table_name) const;
+
+private:
+  // ordered map for reproducible iterating
+  std::map<std::string, Variant> data_;
+
+  template <typename R>
+  R doLookup(const std::string& name) const;
+};
+
+}  // namespace warehouse_ros_sqlite
