@@ -1,3 +1,26 @@
+## warehouse_ros_sqlite (melodic) - 0.9.1-1
+
+The packages in the `warehouse_ros_sqlite` repository were released into the `melodic` distro by running `/home/jafar/.local/bin/bloom-release warehouse_ros_sqlite -t melodic -r melodic` on `Mon, 09 May 2022 17:21:10 -0000`
+
+The `warehouse_ros_sqlite` package was released.
+
+Version of package(s) in repository `warehouse_ros_sqlite`:
+
+- upstream repository: https://github.com/ros-planning/warehouse_ros_sqlite.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.9.1-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.1`
+- catkin_pkg version: `0.4.24`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## warehouse_ros_sqlite (noetic) - 0.9.1-1
 
 The packages in the `warehouse_ros_sqlite` repository were released into the `noetic` distro by running `/home/jafar/.local/bin/bloom-release warehouse_ros_sqlite -t noetic -r noetic` on `Mon, 09 May 2022 17:13:27 -0000`
