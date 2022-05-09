@@ -1,0 +1,12 @@
+Source: ros-melodic-warehouse-ros-sqlite
+Section: misc
+Priority: optional
+Maintainer: MoveIt Release Team <moveit_releasers@googlegroups.com>
+Build-Depends: debhelper (>= 9.0.0), libsqlite3-dev, ros-melodic-catkin, ros-melodic-class-loader, ros-melodic-roscpp, ros-melodic-rostest <!nocheck>, ros-melodic-rostime, ros-melodic-warehouse-ros
+Homepage: http://ros.org/wiki/warehouse_ros
+Standards-Version: 3.9.2
+
+Package: ros-melodic-warehouse-ros-sqlite
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-class-loader, ros-melodic-roscpp, ros-melodic-rostime, ros-melodic-warehouse-ros, sqlite3
+Description: Implementation of warehouse_ros for sqlite
